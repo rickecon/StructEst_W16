@@ -1,8 +1,15 @@
+'''
+------------------------------------------------------------------------
+This is Bobae's supplementary script for MACS 40000: Structural Estimation.
+The current script allows the main script to run smoothly.
+------------------------------------------------------------------------
+'''
+# import packages
 import numpy as np
 import scipy.stats as sts
 import scipy.special as spc
 
-
+# pdf valus for the gamma distribution
 def ga_pdf(xvals, alpha, beta):
     '''
     --------------------------------------------------------------------
@@ -29,6 +36,7 @@ def ga_pdf(xvals, alpha, beta):
 
     return pdf_vals
 
+# pdf valus for the generalized gamma distribution
 def gg_pdf(xvals, alpha, beta, mm):
     '''
     --------------------------------------------------------------------
@@ -56,6 +64,7 @@ def gg_pdf(xvals, alpha, beta, mm):
 
     return pdf_vals
 
+# pdf valus for the generalized beta 2 distribution
 def gb2_pdf(xvals, aa, bb, pp, qq):
     '''
     --------------------------------------------------------------------
@@ -81,6 +90,6 @@ def gb2_pdf(xvals, aa, bb, pp, qq):
     --------------------------------------------------------------------
     '''
     pdf_vals = ((aa * xvals**(aa * pp - 1)) /
-            (bb**(aa * pp) * spc.beta(pp, qq) * (1 + (xvals / bb) ** aa)**(pp + qq)))
+            (bb**(aa * pp) * (1 + (xvals / bb) ** aa)**(pp + qq) * spc.beta(pp, qq)))
 
     return pdf_vals
