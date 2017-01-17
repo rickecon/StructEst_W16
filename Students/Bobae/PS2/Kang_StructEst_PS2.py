@@ -14,6 +14,7 @@ import scipy.stats as sts
 import scipy.special as spc
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
+import os
 
 # import module
 import module as mod
@@ -22,6 +23,12 @@ import module as mod
 data = np.loadtxt('clms.txt')
 # print(data)
 
+# set the directory for saving images
+cur_path = os.path.split(os.path.abspath(__file__))[0]
+output_fldr = 'images'
+output_dir = os.path.join(cur_path, output_fldr)
+if not os.access(output_dir, os.F_OK):
+    os.makedirs(output_dir)
 '''
 ------------------------------------------------------------------------------
 1.(a) Calculate and report the mean, median, maximum, minimum,
@@ -51,6 +58,11 @@ if True: # first plot
     plt.title('Histogram of Fictitious Health Claims', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
+
+    # save the plot
+    output_path_1a_1 = os.path.join(output_dir, 'fig_1a_1')
+    plt.savefig(output_path_1a_1, bbox_inches = 'tight')
+
     plt.show()
     plt.close()
 
@@ -62,6 +74,11 @@ if True: # second plot
     plt.title('Histogram of Fictitious Health Claims (=< 800)', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
+
+    # save the plot
+    output_path_1a_2 = os.path.join(output_dir, 'fig_1a_2')
+    plt.savefig(output_path_1a_2, bbox_inches = 'tight')
+
     plt.show()
     plt.close()
 
@@ -150,8 +167,9 @@ def crit_ga(params, *args):
     return neg_log_lik_val
 
 # initial guesses
-ga_beta_0 = data.var() / data.mean()
-ga_alpha_0 = data.mean() / ga_beta_0
+data_cut = data[data <= 800]
+ga_beta_0 = data_cut.var() / data_cut.mean()
+ga_alpha_0 = data_cut.mean() / ga_beta_0
 ga_params_0 = np.array([ga_alpha_0, ga_beta_0])
 ga_mle_args = (data_cut)
 # optimization
@@ -164,9 +182,8 @@ if True: # MLE results
     print('the value of the likelihood function = ', -1 * ga_results.fun)
     print('VCV = ', ga_results.hess_inv.todense())
 
-dist_pts = np.linspace(0, 800, 800)
-data_cut = data[data <= 800]
-num_bins = 800
+dist_pts = np.linspace(0, 800, len(data_cut))
+num_bins = len(data_cut)
 weights = (1 / data_cut.shape[0]) * np.ones_like(data_cut) * (len(data_cut) / len(data))
 
 if True: # plot
@@ -177,6 +194,11 @@ if True: # plot
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
     plt.legend(loc='upper left')
+
+    # save the plot
+    output_path_1b = os.path.join(output_dir, 'fig_1b')
+    plt.savefig(output_path_1b, bbox_inches = 'tight')
+
     plt.show()
     plt.close()
 
@@ -284,6 +306,11 @@ if True: # plot
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
     plt.legend(loc='upper left')
+
+    # save the plot
+    output_path_1c = os.path.join(output_dir, 'fig_1c')
+    plt.savefig(output_path_1c, bbox_inches = 'tight')
+
     plt.show()
     plt.close()
 
@@ -392,6 +419,11 @@ if True: # plot
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
     plt.legend(loc='upper left')
+
+    # save the plot
+    output_path_1d = os.path.join(output_dir, 'fig_1d')
+    plt.savefig(output_path_1d, bbox_inches = 'tight')
+
     plt.show()
     plt.close()
 
