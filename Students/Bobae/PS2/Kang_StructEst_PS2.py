@@ -54,7 +54,7 @@ if True: # descriptive statistics
 if True: # first plot
     num_bins1 = 1000
     weights1 = (1 / data.shape[0]) * np.ones_like(data)
-    n, bin_cuts, patches = plt.hist(data, num_bins1, weights = weights1)
+    n, bin_cuts, patches = plt.hist(data, num_bins1, normed = True, weights = weights1)
     plt.title('Histogram of Fictitious Health Claims', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
@@ -63,14 +63,14 @@ if True: # first plot
     output_path_1a_1 = os.path.join(output_dir, 'fig_1a_1')
     plt.savefig(output_path_1a_1, bbox_inches = 'tight')
 
-    plt.show()
+    # plt.show()
     plt.close()
 
 if True: # second plot
     data_cut = data[data <= 800]
     num_bins2 = 100
     weights2 = (1 / data_cut.shape[0]) * np.ones_like(data_cut) * (len(data_cut) / len(data))
-    n, bin_cuts, patches = plt.hist(data_cut, num_bins2, weights = weights2)
+    n, bin_cuts, patches = plt.hist(data_cut, num_bins2, normed = True, weights = weights2)
     plt.title('Histogram of Fictitious Health Claims (=< 800)', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
@@ -79,7 +79,7 @@ if True: # second plot
     output_path_1a_2 = os.path.join(output_dir, 'fig_1a_2')
     plt.savefig(output_path_1a_2, bbox_inches = 'tight')
 
-    plt.show()
+    # plt.show()
     plt.close()
 
     print('Histogram Bins sum to: ', n.sum())
@@ -168,38 +168,42 @@ def crit_ga(params, *args):
 
 # initial guesses
 data_cut = data[data <= 800]
-ga_beta_0 = data_cut.var() / data_cut.mean()
-ga_alpha_0 = data_cut.mean() / ga_beta_0
+ga_beta_0 = data.var() / data.mean()
+ga_alpha_0 = data.mean() / ga_beta_0
 ga_params_0 = np.array([ga_alpha_0, ga_beta_0])
-ga_mle_args = (data_cut)
+ga_mle_args = (data)
 # optimization
-ga_results = opt.minimize(crit_ga, ga_params_0, args=(ga_mle_args), bounds = ((0, None), (0, None)))
+ga_results = opt.minimize(crit_ga, ga_params_0, args=(ga_mle_args),
+                        bounds = ((1e-10, None), (1e-10, None)))
 # estimated parameters
 ga_alpha_MLE, ga_beta_MLE = ga_results.x
+print(ga_results)
 
 if True: # MLE results
     print('GA alpha_MLE = ', ga_alpha_MLE, 'GA beta_MLE = ', ga_beta_MLE)
     print('the value of the likelihood function = ', -1 * ga_results.fun)
     print('VCV = ', ga_results.hess_inv.todense())
 
-dist_pts = np.linspace(0, 800, len(data_cut))
-num_bins = len(data_cut)
+dist_pts = np.linspace(0, 800, 1000)
+num_bins = np.arange(0, 800, 8)
 weights = (1 / data_cut.shape[0]) * np.ones_like(data_cut) * (len(data_cut) / len(data))
 
 if True: # plot
-    n, bin_cuts, patches = plt.hist(data_cut, num_bins, weights = weights)
+    n, bin_cuts, patches = plt.hist(data_cut, num_bins, normed = True, weights = weights)
     plt.plot(dist_pts, mod.ga_pdf(dist_pts, ga_alpha_MLE, ga_beta_MLE),
-        linewidth=2, color='r', label='Gamma MLE')
+        linewidth=2, color='k', label='Gamma MLE')
+    plt.xlim(0, 800)
+    plt.ylim(0, 1.1 * n.max())
     plt.title('Histogram of Fictitious Health Claims (=< 800)', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper right')
 
     # save the plot
     output_path_1b = os.path.join(output_dir, 'fig_1b')
     plt.savefig(output_path_1b, bbox_inches = 'tight')
 
-    plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -283,14 +287,15 @@ def crit_gg(params, *args):
 # initial guesses
 gg_beta_0 = ga_beta_MLE
 gg_alpha_0 = ga_alpha_MLE
-gg_mm_0 = 1
+gg_mm_0 = 1.0
 gg_params_0 = np.array([gg_alpha_0, gg_beta_0, gg_mm_0])
-gg_mle_args = (data_cut)
+gg_mle_args = (data)
 # optimization
 gg_results = opt.minimize(crit_gg, gg_params_0, args=(gg_mle_args),
-            bounds = ((0, None), (0, None), (0, None)))
+            bounds = ((1e-10, None), (1e-10, None), (1e-10, None)))
 # estimated parameters
 gg_alpha_MLE, gg_beta_MLE, gg_mm_MLE = gg_results.x
+print(gg_results)
 
 if True: # MLE results
     print('GG alpha_MLE = ', gg_alpha_MLE, 'GG beta_MLE = ', gg_beta_MLE,
@@ -299,19 +304,21 @@ if True: # MLE results
     print('VCV = ', gg_results.hess_inv.todense())
 
 if True: # plot
-    n, bin_cuts, patches = plt.hist(data_cut, num_bins, weights = weights)
+    n, bin_cuts, patches = plt.hist(data_cut, num_bins, normed = True, weights = weights)
     plt.plot(dist_pts, mod.gg_pdf(dist_pts, gg_alpha_MLE, gg_beta_MLE, gg_mm_MLE),
-        linewidth=2, color='r', label='Generalized Gamma MLE')
+        linewidth=2, color='g', label='Generalized Gamma MLE')
+    plt.xlim(0, 800)
+    plt.ylim(0, 1.1 * n.max())
     plt.title('Histogram of Fictitious Health Claims (=< 800)', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper right')
 
     # save the plot
     output_path_1c = os.path.join(output_dir, 'fig_1c')
     plt.savefig(output_path_1c, bbox_inches = 'tight')
 
-    plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -393,17 +400,19 @@ def crit_gb2(params, *args):
     return neg_log_lik_val
 
 # initial guesses
-gb2_qq_0 = 10000
+gb2_qq_0 = 10000.0
 gb2_aa_0 = gg_mm_MLE
 gb2_bb_0 = gb2_qq_0**(1/gg_mm_MLE)*gg_beta_MLE
 gb2_pp_0 = gg_alpha_MLE/gg_mm_MLE
 gb2_params_0 = np.array([gb2_aa_0, gb2_bb_0, gb2_pp_0, gb2_qq_0])
-gb2_mle_args = (data_cut)
+gb2_mle_args = (data)
 # optimization
 gb2_results = opt.minimize(crit_gb2, gb2_params_0, args=(gb2_mle_args),
-            bounds = ((0, None), (0, None), (0, None), (0, None)))
+            bounds = ((1e-10, None), (1e-10, None), (1e-10, None), (1e-10, None)))
 # estimated parameters
 gb2_aa_MLE, gb2_bb_MLE, gb2_pp_MLE, gb2_qq_MLE = gb2_results.x
+print(gb2_results)
+
 
 if True: # MLE results
     print('aa_MLE = ', gb2_aa_MLE, ' bb_MLE = ', gb2_bb_MLE,
@@ -412,19 +421,21 @@ if True: # MLE results
     print('VCV = ', gb2_results.hess_inv.todense())
 
 if True: # plot
-    n, bin_cuts, patches = plt.hist(data_cut, num_bins, weights = weights)
+    n, bin_cuts, patches = plt.hist(data_cut, num_bins, normed = True, weights = weights)
     plt.plot(dist_pts, mod.gb2_pdf(dist_pts, gb2_aa_MLE, gb2_bb_MLE, gb2_pp_MLE, gb2_qq_MLE),
         linewidth=2, color='r', label='Generalized Beta 2 MLE')
+    plt.xlim(0, 800)
+    plt.ylim(0, 1.1 * n.max())
     plt.title('Histogram of Fictitious Health Claims (=< 800)', fontsize = 15)
     plt.xlabel(r'Health claim amounts (USD)')
     plt.ylabel(r'Percent of observations in bin')
-    plt.legend(loc='upper left')
+    plt.legend(loc='upper right')
 
     # save the plot
     output_path_1d = os.path.join(output_dir, 'fig_1d')
     plt.savefig(output_path_1d, bbox_inches = 'tight')
 
-    plt.show()
+    # plt.show()
     plt.close()
 
 
@@ -453,6 +464,22 @@ if True: # likelihood ratio results
     print('chi squared of H0: ga = gb2 with 4 df p-value = ', ga_pval_h0)
     print('chi squared of H0: gg = gb2 with 4 df p-value = ', gg_pval_h0)
 
+if False:
+    n, bin_cuts, patches = plt.hist(data_cut, num_bins, normed = True, weights = weights)
+    plt.plot(dist_pts, mod.ga_pdf(dist_pts, ga_alpha_MLE, ga_beta_MLE),
+        linewidth=2, color='k', ls = 'dashed', label='Gamma MLE')
+    plt.plot(dist_pts, mod.gg_pdf(dist_pts, gg_alpha_MLE, gg_beta_MLE, gg_mm_MLE),
+        linewidth=2, color='g', label='Generalized Gamma MLE')
+    plt.plot(dist_pts, mod.gb2_pdf(dist_pts, gb2_aa_MLE, gb2_bb_MLE, gb2_pp_MLE, gb2_qq_MLE),
+        linewidth=2, color='r', label='Generalized Beta 2 MLE')
+    plt.xlim(0, 800)
+    plt.ylim(0, 1.1 * n.max())
+    plt.title('Histogram of Fictitious Health Claims (=< 800)', fontsize = 15)
+    plt.xlabel(r'Health claim amounts (USD)')
+    plt.ylabel(r'Percent of observations in bin')
+    plt.legend(loc='upper right')
+    plt.show()
+    plt.close()
 
 '''
 ------------------------------------------------------------------------------
